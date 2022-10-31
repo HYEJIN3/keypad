@@ -1,10 +1,15 @@
 import Keypad from "./keypad.js";
 
-document.addEventListener('DOMContentLoaded', () => {
-    let keypad = new Keypad();
+function KeyEvent(){
+    const keypad = new Keypad;
     keypad.render();
-    keypad.completeEvent = (inputValue) => {
-        document.querySelector('#aaa').innerHTML += inputValue;
-    };
 
+    keypad.enter = (value) => {
+        document.querySelector('.key_display').innerHTML = value;
+    }
+
+}
+
+document.querySelector('.keypad_on').addEventListener('click', () => {
+    KeyEvent();
 });

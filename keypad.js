@@ -6,6 +6,7 @@ export default class Keypad {
         Keypad._instance = this;
     }
 
+    keypadStatus = 0; // keypad overlap prevention
     wordStatus = 0;  // shift control
     inputValue = '';  // input value
 
@@ -18,20 +19,30 @@ export default class Keypad {
 
     // basic rendering
     async render(req) {
-        await this.keypadHtmlRender();
-        await this.keypadRender();
-        await this.keypadEvent();
-        await this.keypadHoverEvent();
-
-        if (req){
-            this.inputEvent = () => {req.input({inputValue: this.inputValue});};
-            this.completeEvent = () => {req.complete({enterValue: this.inputValue});};
+        switch(this.keypadStatus) {
+            case 0:
+                this.keypadStatus = 1;         
+                await this.keypadHtmlRender();
+                await this.keypadRender();
+                await this.keypadEvent();
+                await this.keypadHoverEvent();
+        
+                if (req){
+                    this.inputEvent = () => {req.input({inputValue: this.inputValue});};
+                    this.completeEvent = () => {req.complete({enterValue: this.inputValue});};
+                }
+                break;
+            default:
+                break;
         }
+
     }
 
+    // keypad html rendering
     async keypadHtmlRender() {
+        // css style add
         let keypadCssElement = document.createElement('style');
-        keypadCssElement.setAttribute('id', '1');
+        keypadCssElement.setAttribute('class', 'keypad_css');
         keypadCssElement.innerHTML =`
             .keypad_container {
                 width: 100%;
@@ -540,7 +551,9 @@ export default class Keypad {
             }
             `;
         document.head.insertBefore(keypadCssElement, document.head.childNodes[0]);
-        document.querySelector('body').innerHTML += `
+
+        // html add
+        document.querySelector('body').insertAdjacentHTML('beforeend', `
             <div class="keypad_pw">
                 <div class="keypad_container">
                     <div class="keypad_keyBox">
@@ -631,7 +644,8 @@ export default class Keypad {
                         </div>
                     </div>
                 </div>
-            </div>`;
+            </div>
+            `);
     }
 
     keypadEvent() {
@@ -641,7 +655,6 @@ export default class Keypad {
                 this.inputValue += el.innerHTML;
                 this.inputEvent(this.inputValue);
                 this.add(el.innerHTML);
-
                 if (this.wordStatus === 1){this.keypadinit()};
             });
 
@@ -649,7 +662,6 @@ export default class Keypad {
                 this.inputValue += el.innerHTML;
                 this.inputEvent(this.inputValue);
                 this.add(el.innerHTML);
-
                 if (this.wordStatus === 1){this.keypadinit()};
             });
         });
@@ -659,7 +671,6 @@ export default class Keypad {
                 this.inputValue += el.childNodes[1].outerText;
                 this.inputEvent(this.inputValue);
                 this.add(el.childNodes[1].outerText);
-
                 if (this.wordStatus === 1){this.keypadinit()};
             });
 
@@ -667,7 +678,6 @@ export default class Keypad {
                 this.inputValue += el.childNodes[1].outerText;
                 this.inputEvent(this.inputValue);
                 this.add(el.childNodes[1].outerText);
-
                 if (this.wordStatus === 1){this.keypadinit()};
             });
         });
@@ -695,6 +705,9 @@ export default class Keypad {
                     document.querySelectorAll('.keypad_empty')[i].remove();
                 }
                 this.inputValue = '';
+                this.keypadStatus = 0;
+                document.querySelector('.keypad_css').remove();
+                document.querySelector('.keypad_pw').remove();
             } catch (e) {
                 console.log(e);
             }
@@ -704,6 +717,9 @@ export default class Keypad {
             try {
                 this.completeEvent(this.inputValue);
                 this.enter(this.inputValue);
+                this.inputValue = '';
+                this.keypadStatus = 0;
+                document.querySelector('.keypad_css').remove();
                 document.querySelectorAll('.keypad_pw').remove();
             } catch (e) {
                 console.log(e);
@@ -739,8 +755,6 @@ export default class Keypad {
                     break;
             }
         });
-
-
     }
 
     // keypad Hover Event
